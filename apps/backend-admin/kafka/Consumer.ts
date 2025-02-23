@@ -13,7 +13,7 @@ export const jobsconsumer = async () => {
     
     await consumer.subscribe({
         topic: "job-postings", 
-        fromBeginning: true
+        fromBeginning: false
     });
 
     await consumer.run({
@@ -23,12 +23,12 @@ export const jobsconsumer = async () => {
                 
                 console.log(`Received job posting:`, data);
 
-                try {
-                    await jobModel.create(data);
-                    console.log("Job saved to DB successfully");
-                } catch (err) {
-                    console.error("Error saving job to DB:", err);
-                }
+                // try {
+                //     await jobModel.create(data);
+                //     console.log("Job saved to DB successfully");
+                // } catch (err) {
+                //     console.error("Error saving job to DB:", err);
+                // }
             } else {
                 console.warn("Received empty message");
             }

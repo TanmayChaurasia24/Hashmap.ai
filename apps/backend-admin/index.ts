@@ -3,6 +3,7 @@ import connectdb from "./db";
 import cors from "cors";
 import adminroute from "./routes/adminuser.route"
 import jobroute from "./routes/jobs.route"
+import { jobsconsumer } from "./kafka/Consumer";
 
 const port = 8000;
 const app = express();
@@ -13,7 +14,7 @@ app.use(cors({
 }));
 
 connectdb();
-
+jobsconsumer();
 app.use('/api/admin', adminroute)
 app.use('/api/jobs', jobroute)
 
