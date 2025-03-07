@@ -15,8 +15,9 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
-
+import Cookies from "js-cookie"
 import { useState } from "react";
+import axios from "axios";
 
 interface ProfileData {
   name: string;
@@ -45,9 +46,34 @@ const ProfileBasicInfo = () => {
     });
   };
 
-  const handleSave = () => {
-    setProfileData(tempProfileData); // Save changes
-    setEditMode(false); // Close modal
+  const handleSave = async() => {
+    setProfileData(tempProfileData); 
+    console.log("inside handle save of profilebasicinfo...");
+    
+    try {
+      const token = Cookies.get("User");
+      if(!token) {
+        console.log("token not available..", token);
+        return;
+      }
+      const response = await axios.put("http://localhost:3000/api/auth/single", {profileData}, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      if(!response) {
+        console.log("response not available form backend at basic profile info..");
+        return;
+      }
+
+      console.log("reponse from backend at basic profile update is: ", response);
+      
+    } catch (error) {
+      console.log("error while updating profile basic information");
+      return;
+    }
   };
 
   return (

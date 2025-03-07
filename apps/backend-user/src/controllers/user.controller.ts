@@ -64,7 +64,7 @@ export const login = async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({
         message: "username and password are required",
       });
-    }    
+    }
 
     const isthere = await userModel.findOne({ username });
     if (!isthere) {
@@ -143,18 +143,47 @@ export const allUsers = async (req: Request, res: Response): Promise<any> => {
   try {
     const response = await userModel.find();
 
-    if(!response) {
+    if (!response) {
       return res.status(404).json({ message: "No users found" });
     }
 
     return res.status(201).json({
       message: "users found successfully",
       users: response,
-    })
+    });
   } catch (error: any) {
     return res.status(500).json({
       message: "error while fetching all users",
-      errormessage: error.message
-    })
+      errormessage: error.message,
+    });
   }
-}
+};
+
+export const updateUserinfo = async (req: Request, res: Response): Promise<any> => {
+  console.log("inside");
+  
+  const { profileData } = req.body;
+  const token: any = req.headers.authorization?.split(" ")[1];
+  const secretKey: any = process.env.JWT_SECRET;
+
+  try {
+    const decoded: any = jwt.verify(token, secretKey);
+    console.log(decoded);
+    const username = decoded.id;
+
+    const user = await userModel.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    console.log("user updated profile detail are: ", profileData);
+
+
+    return res.status(201).json({
+      user,
+    });
+    console.log(username);
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or Expired Token" });
+  }
+};

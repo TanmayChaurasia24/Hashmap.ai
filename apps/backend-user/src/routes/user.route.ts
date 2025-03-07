@@ -1,5 +1,5 @@
 import express from "express";
-import { allUsers, signup } from "../controllers/user.controller";
+import { allUsers, signup, updateUserinfo } from "../controllers/user.controller";
 import { login } from "../controllers/user.controller";
 import { extractUserInformationn } from "../controllers/user.controller";
 
@@ -9,5 +9,6 @@ router.post('/signup', signup);
 router.post('/login', login);
 router.get('/info', extractUserInformationn);
 router.get('/all', allUsers);
+router.put('/single', updateUserinfo);
 
-export default router
+export default router;
