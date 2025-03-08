@@ -11,6 +11,10 @@ const usermodel = new mongoose.Schema(
         type: String,
         trim: true
     },
+    phone: {
+      type: String,
+      trim: true,
+    },
     email: {
       type: String,
       require: true,
@@ -53,9 +57,8 @@ const usermodel = new mongoose.Schema(
       },
     ],
     location: {
-      country: { type: String, trim: true },
-      state: { type: String, trim: true },
-      city: { type: String, trim: true },
+      type: String,
+      trim: true
     },
     education: [
       {

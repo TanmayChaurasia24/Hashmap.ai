@@ -159,31 +159,53 @@ export const allUsers = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export const updateUserinfo = async (req: Request, res: Response): Promise<any> => {
-  console.log("inside");
-  
-  const { profileData } = req.body;
-  const token: any = req.headers.authorization?.split(" ")[1];
-  const secretKey: any = process.env.JWT_SECRET;
 
+export const updateUserInfo = async (req: Request, res: Response): Promise<any> => {
   try {
-    const decoded: any = jwt.verify(token, secretKey);
-    console.log(decoded);
-    const username = decoded.id;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Authorization token missing or invalid" });
+    }
 
+    const token = authHeader.split(" ")[1];
+    const secretKey: string = process.env.JWT_SECRET as string;
+    const decoded: any = jwt.verify(token, secretKey);
+
+    const username = decoded.id;
     const user = await userModel.findOne({ username });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    console.log("user updated profile detail are: ", profileData);
+    // Update only the provided fields dynamically
+    const updates = req.body;
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "Invalid profile data" });
+    }
 
+    console.log("Updating profile with:", updates);
 
-    return res.status(201).json({
-      user,
-    });
-    console.log(username);
+    const updatedUser = await userModel.findOneAndUpdate(
+      { username },
+      { $set: updates },
+      { new: true } // Return the updated document
+    );
+
+    return res.status(200).json({ updatedUser });
   } catch (err) {
-    return res.status(401).json({ message: "Invalid or Expired Token" });
+    console.error("Error updating profile:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };
+
+
+export const addUserInfor = async(req: Request, res: Response) => {
+  try {
+    
+  } catch (error) {
+    console.log("error adding user information: ", error);
+    return res.status(500).json({
+      message: "internal server error"
+    })
+  }
+}

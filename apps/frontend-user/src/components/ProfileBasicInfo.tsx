@@ -7,17 +7,13 @@ import {
   AlertDialogAction,
   AlertDialogHeader,
   AlertDialogFooter,
-} from "@/components/ui/alert-dialog"; 
+} from "@/components/ui/alert-dialog";
 
-import {
-  Pencil,
-  MapPin,
-  Mail,
-  Phone,
-} from "lucide-react";
-import Cookies from "js-cookie"
-import { useState } from "react";
+import { Pencil, MapPin, Mail, Phone } from "lucide-react";
+
+import { useEffect, useState } from "react";
 import axios from "axios";
+import { fetchUserDetail, token } from "@/utils/FetchUserDetail";
 
 interface ProfileData {
   name: string;
@@ -36,8 +32,34 @@ const ProfileBasicInfo = () => {
     location: "San Francisco, CA",
     title: "Senior Software Engineer",
   });
-
-  const [tempProfileData, setTempProfileData] = useState(profileData); // Store temporary changes
+  const [tempProfileData, setTempProfileData] =
+    useState<ProfileData>(profileData); // Store temporary changes
+    const fetchdetail = async () => {
+      try {
+        const user: any = await fetchUserDetail();
+        console.log("Fetched user data:", user);
+        setProfileData({
+          name: user.name || "John Doe",
+          email: user.email || "john.doe@example.com",
+          phone: user.phone || "+1 234 567 890",
+          location: user.location || "San Francisco, CA",
+          title: user.title || "Senior Software Engineer",
+        });
+        setTempProfileData({
+          name: user.name || "John Doe",
+          email: user.email || "john.doe@example.com",
+          phone: user.phone || "+1 234 567 890",
+          location: user.location || "San Francisco, CA",
+          title: user.title || "Senior Software Engineer",
+        });
+      } catch (error) {
+        console.error("Error fetching user details:", error);
+      }
+    };
+    useEffect(() => {
+      fetchdetail();
+    }, []);
+    
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTempProfileData({
@@ -46,30 +68,40 @@ const ProfileBasicInfo = () => {
     });
   };
 
-  const handleSave = async() => {
-    setProfileData(tempProfileData); 
+  const handleSave = async () => {
+    setProfileData(tempProfileData);
     console.log("inside handle save of profilebasicinfo...");
-    
+
     try {
-      const token = Cookies.get("User");
-      if(!token) {
+      if (!token) {
         console.log("token not available..", token);
         return;
       }
-      const response = await axios.put("http://localhost:3000/api/auth/single", {profileData}, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+      const response = await axios.put(
+        "http://localhost:3000/api/auth/single",
+         tempProfileData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
-      })
+      );
 
-      if(!response) {
-        console.log("response not available form backend at basic profile info..");
+      if (!response) {
+        console.log(
+          "response not available form backend at basic profile info.."
+        );
         return;
       }
 
-      console.log("reponse from backend at basic profile update is: ", response);
-      
+      console.log(
+        "reponse from backend at basic profile update is: ",
+        response
+      );
+
+      await fetchdetail();
+      setEditMode(false)
     } catch (error) {
       console.log("error while updating profile basic information");
       return;
