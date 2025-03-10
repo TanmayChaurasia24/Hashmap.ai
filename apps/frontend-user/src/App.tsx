@@ -12,10 +12,12 @@ import ProfilePage from "./pages/profile";
 import TokenPurchase from "./pages/Purchase";
 import WriteBlog from "./pages/WriteBlog";
 import CreateResume from "./pages/CreateResume";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
     <>
+    <Toaster/>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />

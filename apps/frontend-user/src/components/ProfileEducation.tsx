@@ -7,10 +7,14 @@ import {
   AlertDialogAction,
 } from "./ui/alert-dialog";
 import { Plus, School, Pencil, Trash } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AlertDialogHeader, AlertDialogFooter } from "./ui/alert-dialog";
+import axios from "axios";
+import { fetchUserDetail, token } from "@/utils/FetchUserDetail";
+import toast from "react-hot-toast";
 
 type Education = {
+  _id?: string; // Add _id for MongoDB documents
   degree: string;
   school: string;
   duration: string;
@@ -21,40 +25,73 @@ const ProfileEducation = () => {
     null
   );
   const [editEducation, setEditEducation] = useState(false);
-  const [educations, setEducations] = useState<Education[]>([
-    {
-      degree: "Computer Science, BSc",
-      school: "University of Technology",
-      duration: "2013 - 2017",
-    },
-  ]);
-
+  const [educations, setEducations] = useState<Education[]>([]);
   const [currentEducation, setCurrentEducation] = useState<Education>({
     degree: "",
     school: "",
     duration: "",
   });
 
-  const handleEducationSave = () => {
-    if (selectedItemIndex !== null) {
-      const newEducations = [...educations];
-      newEducations[selectedItemIndex] = currentEducation;
-      setEducations(newEducations);
-    } else {
-      setEducations([...educations, currentEducation]);
+
+  // Fetch user's education data
+  const fetchEducation = async () => {
+    try {
+      const user = await fetchUserDetail();
+      setEducations(user.education);
+    } catch (error) {
+      console.error("Error fetching education:", error);
     }
-    setEditEducation(false);
-    setSelectedItemIndex(null);
-    setCurrentEducation({ degree: "", school: "", duration: "" });
+  };
+  useEffect(() => {
+    fetchEducation();
+  }, []);
+
+  const handleEducationSave = async () => {
+    if (!token) {
+      console.log("token not available");
+      return;
+    }
+    try {
+      console.log("current education is: ", currentEducation);
+      const response: any = await axios.post(
+        "http://localhost:3000/api/auth/add",
+        {
+          field: "education",
+          item: currentEducation,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if(response.status !== 200) {
+        console.log("Error saving education:", response);
+        return;
+      }
+
+      console.log("added education successfully", response.data);
+      await fetchEducation()
+      toast.success("Done!");
+      console.log("toast shown!");
+      
+      return;
+    } catch (error) {
+      console.log("error while saving the new education");
+      return;
+    }
   };
 
-  const handleEducationDelete = (index: number) => {
-    setEducations(educations.filter((_, i) => i !== index));
+  // Delete education entry
+  const handleEducationDelete = async (id: string, index: number) => {
+
   };
 
   return (
     <div>
-      {/* Education */}
+      {/* Education Section */}
       <section className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-gray-900">Education</h3>
@@ -70,7 +107,10 @@ const ProfileEducation = () => {
         </div>
         <div className="space-y-4">
           {educations.map((edu, index) => (
-            <div key={index} className="flex gap-4 group relative items-center">
+            <div
+              key={edu._id}
+              className="flex gap-4 group relative items-center"
+            >
               <School className="text-gray-600 w-12 h-12 bg-gray-100 rounded-lg p-2 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-gray-900">{edu.degree}</h4>
@@ -90,7 +130,9 @@ const ProfileEducation = () => {
                 </button>
                 <button
                   className="p-2 text-red-600"
-                  onClick={() => handleEducationDelete(index)}
+                  onClick={() =>
+                    handleEducationDelete(edu._id as string, index)
+                  }
                 >
                   <Trash size={16} />
                 </button>
@@ -99,6 +141,7 @@ const ProfileEducation = () => {
           ))}
         </div>
       </section>
+
       {/* Edit Education Modal */}
       <AlertDialog open={editEducation} onOpenChange={setEditEducation}>
         <AlertDialogContent>

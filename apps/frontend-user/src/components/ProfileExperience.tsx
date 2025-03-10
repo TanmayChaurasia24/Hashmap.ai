@@ -1,20 +1,30 @@
 import {
   AlertDialog,
-  AlertDialogContent,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogCancel,
   AlertDialogAction,
-} from "@radix-ui/react-alert-dialog";
-import { Plus, Briefcase, Pencil } from "lucide-react";
-import React, { useState } from "react";
-import { AlertDialogHeader, AlertDialogFooter } from "./ui/alert-dialog";
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { fetchUserDetail, token } from "@/utils/FetchUserDetail";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { Briefcase, Pencil, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 
-type Experience = {
+interface Experience {
   title: string;
   company: string;
   duration: string;
-};
+}
+
+interface UserResponse {
+  experience: Experience[];
+  // Add other user fields as needed
+}
 
 const ProfileExperience = () => {
   const [editExperience, setEditExperience] = useState(false);
@@ -27,40 +37,74 @@ const ProfileExperience = () => {
     company: "",
     duration: "",
   });
-  const [experiences, setExperiences] = useState<Experience[]>([
-    {
-      title: "Senior Software Engineer",
-      company: "Tech Corp Inc.",
-      duration: "2020 - Present · 3 years",
-    },
-    {
-      title: "Software Engineer",
-      company: "Innovation Labs",
-      duration: "2018 - 2020 · 2 years",
-    },
-    {
-      title: "Junior Developer",
-      company: "Startup Co",
-      duration: "2016 - 2018 · 2 years",
-    },
-    {
-      title: "Software Developer Intern",
-      company: "Tech Solutions",
-      duration: "2015 - 2016 · 1 year",
-    },
-  ]);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
 
-  const handleExperienceSave = () => {
-    if (selectedItemIndex !== null) {
-      const newExperiences = [...experiences];
-      newExperiences[selectedItemIndex] = currentExperience;
-      setExperiences(newExperiences);
-    } else {
-      setExperiences([...experiences, currentExperience]);
+  const fetchExp = async () => {
+    try {
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+
+      const user = await fetchUserDetail();
+      setExperiences(user.experience);
+    } catch (error) {
+      toast.error("Failed to fetch experience data");
     }
-    setEditExperience(false);
-    setSelectedItemIndex(null);
-    setCurrentExperience({ title: "", company: "", duration: "" });
+  };
+
+  useEffect(() => {
+    fetchExp();
+  }, []);
+
+  const handleExperienceSave = async () => {
+    try {
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+
+      if (selectedItemIndex === null) {
+        // Add new experience
+        await axios.post(
+          "http://localhost:3000/api/auth/add",
+          {
+            field: "experience",
+            item: currentExperience,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        toast.success("Done");
+      } else {
+        // Update existing experience
+        await axios.put(
+          "http://localhost:3000/api/auth/update",
+          {
+            field: "experience",
+            index: selectedItemIndex,
+            item: currentExperience,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      }
+
+      await fetchExp();
+      setEditExperience(false);
+      setSelectedItemIndex(null);
+      setCurrentExperience({ title: "", company: "", duration: "" });
+
+      toast.error("Done");
+    } catch (error) {
+      toast.error("error");
+    }
   };
 
   return (
@@ -73,6 +117,7 @@ const ProfileExperience = () => {
             onClick={() => {
               setEditExperience(true);
               setSelectedItemIndex(null);
+              setCurrentExperience({ title: "", company: "", duration: "" });
             }}
           >
             <Plus size={20} className="text-gray-600" />
@@ -111,7 +156,7 @@ const ProfileExperience = () => {
           )}
         </div>
       </section>
-      {/* Edit Experience Modal */}
+
       <AlertDialog open={editExperience} onOpenChange={setEditExperience}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -174,7 +219,12 @@ const ProfileExperience = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setEditExperience(false)}>
+            <AlertDialogCancel
+              onClick={() => {
+                setEditExperience(false);
+                setCurrentExperience({ title: "", company: "", duration: "" });
+              }}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleExperienceSave}>
@@ -188,6 +238,3 @@ const ProfileExperience = () => {
 };
 
 export default ProfileExperience;
-function setSelectedItemIndex(arg0: null) {
-  throw new Error("Function not implemented.");
-}

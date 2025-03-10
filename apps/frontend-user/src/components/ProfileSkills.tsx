@@ -1,5 +1,5 @@
 import { Trash2, Plus } from "lucide-react";
-import  { useState } from "react";
+import  { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -10,6 +10,8 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "./ui/alert-dialog";
+import { fetchUserDetail, token } from "@/utils/FetchUserDetail";
+import toast from "react-hot-toast";
 
 type Skill = {
   name: string;
@@ -18,15 +20,25 @@ type Skill = {
 
 const ProfileSkills = () => {
   const [editSkills, setEditSkills] = useState(false);
-  const [skills, setSkills] = useState<Skill[]>([
-    { name: "React", level: 90 },
-    { name: "TypeScript", level: 85 },
-    { name: "Node.js", level: 80 },
-    { name: "Python", level: 75 },
-    { name: "AWS", level: 70 },
-  ]);
+  const [skills, setSkills] = useState<Skill[]>([]);
 
   const [newSkill, setNewSkill] = useState<Skill>({ name: "", level: 50 });
+  const fetchskills = async () => {
+    try {
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+
+      const user = await fetchUserDetail();
+      setSkills(user.skills);
+    } catch (error) {
+      toast.error("Failed to fetch skills");
+    }
+  };
+
+  useEffect(() => {
+    fetchskills();
+  }, []);
 
   const handleAddSkill = () => {
     if (newSkill.name.trim() !== "") {

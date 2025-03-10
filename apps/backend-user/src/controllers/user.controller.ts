@@ -188,7 +188,7 @@ export const updateUserInfo = async (req: Request, res: Response): Promise<any> 
     const updatedUser = await userModel.findOneAndUpdate(
       { username },
       { $set: updates },
-      { new: true } // Return the updated document
+      { new: true } 
     );
 
     return res.status(200).json({ updatedUser });
@@ -199,8 +199,41 @@ export const updateUserInfo = async (req: Request, res: Response): Promise<any> 
 };
 
 
-export const addUserInfor = async(req: Request, res: Response) => {
+export const addUserInfor = async(req: Request, res: Response): Promise<any> => {
   try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Authorization token missing or invalid" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const secretKey: string = process.env.JWT_SECRET as string;
+    const decoded: any = jwt.verify(token, secretKey);
+
+    const username = decoded.id;
+    const user: any = await userModel.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    console.log("user is: ", user);
+
+    const {field,item}: {field: any, item: any} = req.body;
+    console.log(field,item);
+  
+
+    const updateduser = await userModel.findOneAndUpdate(
+      { username },
+      { $push: { [field]: item } },
+      { new: true } 
+    );
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.status(200).json({
+      message: "User information updated successfully",
+      user: updateduser
+    })
     
   } catch (error) {
     console.log("error adding user information: ", error);
