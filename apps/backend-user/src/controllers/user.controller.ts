@@ -185,6 +185,16 @@ export const updateUserInfo = async (req: Request, res: Response): Promise<any> 
 
     console.log("Updating profile with:", updates);
 
+    if(updates.field === "skills") {
+      user.skills[updates.index] = updates.item
+      await user.save();
+      console.log("skill updated");
+      return res.status(201).json({
+        message: "Skills updated successfully",
+        user: user
+      })
+    }
+
     const updatedUser = await userModel.findOneAndUpdate(
       { username },
       { $set: updates },

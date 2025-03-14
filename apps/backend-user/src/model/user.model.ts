@@ -8,8 +8,8 @@ const usermodel = new mongoose.Schema(
       trim: true,
     },
     title: {
-        type: String,
-        trim: true
+      type: String,
+      trim: true,
     },
     phone: {
       type: String,
@@ -36,10 +36,18 @@ const usermodel = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    skills: {
-      type: [String],
-      default: [],
-    },
+    skills: [
+      {
+        name: {
+          type: String,
+          trim: true,
+        },
+        level: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
     profilepic: {
       type: String,
       default: " ",
@@ -58,7 +66,7 @@ const usermodel = new mongoose.Schema(
     ],
     location: {
       type: String,
-      trim: true
+      trim: true,
     },
     education: [
       {
