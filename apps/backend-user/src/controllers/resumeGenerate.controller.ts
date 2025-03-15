@@ -1,57 +1,58 @@
 import { Request, Response } from "express";
+import { ContentGenPromptResume } from "../lib/prompt/ContentGenResume";
 
 export const generateResumeContent = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   const { userDetail, jobDescription } = req.body;
-  const model = process.env.RESUME_GENERATION_MODEL;
-  const maxTokens = 2048; 
-
   try {
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/a08822ecd78ffb3acede87da0e234c0e/ai/run/${model}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: "system",
-              content: "You are a helpful assistant",
-            },
-            {
-              role: "user",
-              content: `
-                User details: ${userDetail}  
-                Job description: ${jobDescription} 
-                Create an ATS-friendly resume based on the given user details and job description in JSON format.  
-                - Use numbers while writing project descriptions or work experience where applicable. If numbers are already provided, do not modify them.  
-                - Ensure the resume is well-structured, with clear sections for experience, education, skills, projects, and certifications.  
-                - Optimize the content with relevant keywords from the job description to increase ATS compatibility.  
-                - Maintain a professional and concise tone.  
-                You can use any amount of tokens necessary, but ensure the content is high-quality and ATS-optimized.`,
-            },
-          ],
-          max_tokens: maxTokens, // Adding max_tokens to limit response length
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`);
+    if(!userDetail || !jobDescription) {
+      return res.status(400).json({ message: "Please provide user details and job description"});
     }
 
-    const data = await response.json();
-
-    return res.status(200).json({ success: true, data });
-  } catch (error: any) {
-    return res.status(500).json({
-      message: "Error in generating resume",
-      error: error.message,
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        // "HTTP-Referer": "<YOUR_SITE_URL>", // Optional. Site URL for rankings on openrouter.ai.
+        // "X-Title": "<YOUR_SITE_NAME>", // Optional. Site title for rankings on openrouter.ai.
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "model": "google/gemma-3-4b-it:free",
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": () => ContentGenPromptResume(userDetail, jobDescription)
+              },
+              // {
+              //   "type": "image_url",
+              //   "image_url": {
+              //     "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
+              //   }
+              // }
+            ]
+          }
+        ]
+      })
     });
+
+    if(!response) {
+      return res.status(500).json({ message: "Failed to generate resume content" });
+    }
+
+    return res.status(201).json({
+      "status": "success",
+      "data": response.json(),
+    })
+  } catch (error: any) {
+    console.log(error);
+    return res.status(500).json({
+      message: "error while generating content from openrouter api"
+    })
   }
 };
