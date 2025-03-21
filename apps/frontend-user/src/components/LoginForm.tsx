@@ -67,7 +67,7 @@ export function LoginForm() {
         sameSite: "Lax",
       });
 
-      toast.success("We've created your account for you.");
+      toast.success("logged in.");
       navigate("/");
     } catch (error: any) {
       console.error("Error during signup:", error);

@@ -83,6 +83,22 @@ const usermodel = new mongoose.Schema(
         description: { type: String, trim: true },
       },
     ],
+    projects: [
+      {
+        name: { type: String, trim: true, required: true },
+        description: { type: String, trim: true, required: true },
+        link: { 
+          type: String, 
+          trim: true,
+          validate: {
+            validator: (v) => /^https?:\/\/[^\s$.?#].[^\s]*$/i.test(v),
+            message: 'Invalid URL format',
+          }
+        },
+        image: { type: String, trim: true },
+        skills: [{ type: String, trim: true }],
+      }
+    ],
     socialLinks: {
       linkedin: { type: String, trim: true },
       github: { type: String, trim: true },

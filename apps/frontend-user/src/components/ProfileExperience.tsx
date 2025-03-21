@@ -21,10 +21,6 @@ interface Experience {
   duration: string;
 }
 
-interface UserResponse {
-  experience: Experience[];
-  // Add other user fields as needed
-}
 
 const ProfileExperience = () => {
   const [editExperience, setEditExperience] = useState(false);
@@ -81,7 +77,7 @@ const ProfileExperience = () => {
       } else {
         // Update existing experience
         await axios.put(
-          "http://localhost:3000/api/auth/update",
+          "http://localhost:3000/api/auth/single",
           {
             field: "experience",
             index: selectedItemIndex,
