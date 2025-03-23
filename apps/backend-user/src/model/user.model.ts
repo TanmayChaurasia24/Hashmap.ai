@@ -111,6 +111,13 @@ const usermodel = new mongoose.Schema(
         date: { type: Date },
       },
     ],
+    achivements: [
+      {
+        title: { type: String, trim: true },
+        description: { type: String, trim: true },
+        date: {type: String, trim: true}
+      }
+    ]
   },
   { timestamps: true }
 );
